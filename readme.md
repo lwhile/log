@@ -10,7 +10,7 @@
 ```go
 
 import (
-    "git.gzsunrun.cn/sunruniaas/sunruniaas-utils/log"
+    "git.gzsunrun.cn/sunrunlib/log"
 )
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 ```go 
 
 import (
-    "git.gzsunrun.cn/sunruniaas/sunruniaas-utils/log"
+    "git.gzsunrun.cn/sunrunlib/log"
 )
 
 func main() {
