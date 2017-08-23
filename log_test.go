@@ -1,6 +1,7 @@
 package log
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -8,6 +9,9 @@ import (
 )
 
 func TestAddHooks(t *testing.T) {
+	// 测试思路:
+	// 这里只对 hook 是否成功添加进logrus做测试
+
 	allLevels := []logrus.Level{logrus.ErrorLevel, logrus.InfoLevel, logrus.PanicLevel, logrus.DebugLevel, logrus.WarnLevel, logrus.FatalLevel}
 	for _, ele := range allLevels {
 		if len(baseLogger.entry.Logger.Hooks[ele]) != 0 {
@@ -40,41 +44,41 @@ func TestAddHooks(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	if len(baseLogger.entry.Logger.Hooks[logrus.InfoLevel]) != 2 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.InfoLevel]) != 2")
+	}
+
+	err = AddRotateHook("log.log", FatalLevel, time.Second, time.Second, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 1 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 1")
+	}
+
+	if len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 1 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 1")
+	}
+
 }
 
-// var logPath = "log.log"
+func Test_convert2logrusLevels(t *testing.T) {
+	levels := []Level{InfoLevel, WarnLevel, ErrorLevel, FatalLevel}
+	lglels := convert2logrusLevels(levels...)
 
-// func removeLogFile(fileName string) error {
-// 	return os.Remove(fileName)
-// }
+	if reflect.TypeOf(lglels[0]) != reflect.TypeOf(logrus.InfoLevel) {
+		t.Fatal()
+	}
 
-// func fileExist(path string) bool {
-// 	_, err := os.Stat(path)
-// 	if err != nil && os.IsNotExist(err) {
-// 		return false
-// 	}
-// 	if err != nil {
-// 		Error(err)
-// 	}
-// 	return true
-// }
+	if reflect.TypeOf(lglels[1]) != reflect.TypeOf(logrus.WarnLevel) {
+		t.Fatal()
+	}
 
-// func Test_convert2logrusLevels(t *testing.T) {
-// 	levels := []Level{InfoLevel, WarnLevel, ErrorLevel, FatalLevel}
-// 	lglels := convert2logrusLevels(levels...)
-
-// 	if reflect.TypeOf(lglels[0]) != reflect.TypeOf(logrus.InfoLevel) {
-// 		t.Fatal()
-// 	}
-
-// 	if reflect.TypeOf(lglels[1]) != reflect.TypeOf(logrus.WarnLevel) {
-// 		t.Fatal()
-// 	}
-
-// 	if reflect.TypeOf(lglels[2]) != reflect.TypeOf(logrus.FatalLevel) {
-// 		t.Fatal()
-// 	}
-// }
+	if reflect.TypeOf(lglels[2]) != reflect.TypeOf(logrus.FatalLevel) {
+		t.Fatal()
+	}
+}
 
 // func Test_AddRotateHook(t *testing.T) {
 
