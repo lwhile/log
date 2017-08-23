@@ -277,22 +277,7 @@ func AddRotateHook(path string, level Level, maxAge, rotateTime time.Duration, f
 		return err
 	}
 
-	var writeMap lfshook.WriterMap
-
-	switch {
-	case level == InfoLevel:
-		writeMap = lfshook.WriterMap{logrus.InfoLevel: writer}
-	case level == ErrorLevel:
-		writeMap = lfshook.WriterMap{logrus.ErrorLevel: writer}
-	case level == WarnLevel:
-		writeMap = lfshook.WriterMap{logrus.WarnLevel: writer}
-	case level == DebugLevel:
-		writeMap = lfshook.WriterMap{logrus.DebugLevel: writer}
-	case level == PanicLevel:
-		writeMap = lfshook.WriterMap{logrus.PanicLevel: writer}
-	case level == FatalLevel:
-		writeMap = lfshook.WriterMap{logrus.FatalLevel: writer}
-	}
+	writeMap := getWriteMap(level, writer)
 
 	hook := lfshook.NewHook(writeMap)
 
@@ -311,22 +296,7 @@ func AddRotateHookByDay(path string, level Level, maxAge, rotateDay int) error {
 		return err
 	}
 
-	var writeMap lfshook.WriterMap
-
-	switch {
-	case level == InfoLevel:
-		writeMap = lfshook.WriterMap{logrus.InfoLevel: writer}
-	case level == ErrorLevel:
-		writeMap = lfshook.WriterMap{logrus.ErrorLevel: writer}
-	case level == WarnLevel:
-		writeMap = lfshook.WriterMap{logrus.WarnLevel: writer}
-	case level == DebugLevel:
-		writeMap = lfshook.WriterMap{logrus.DebugLevel: writer}
-	case level == PanicLevel:
-		writeMap = lfshook.WriterMap{logrus.PanicLevel: writer}
-	case level == FatalLevel:
-		writeMap = lfshook.WriterMap{logrus.FatalLevel: writer}
-	}
+	writeMap := getWriteMap(level, writer)
 
 	hook := lfshook.NewHook(writeMap)
 
