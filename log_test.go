@@ -39,7 +39,7 @@ func TestAddHooks(t *testing.T) {
 	}
 
 	// test add a rotate hook
-	err = AddRotateHook("log.log", InfoLevel, time.Second, time.Second, "")
+	err = AddRotateHook("log.log", time.Second, time.Second, "", InfoLevel, ErrorLevel)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,17 +48,12 @@ func TestAddHooks(t *testing.T) {
 		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.InfoLevel]) != 2")
 	}
 
-	err = AddRotateHook("log.log", FatalLevel, time.Second, time.Second, "")
-	if err != nil {
-		t.Fatal(err)
+	if len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 2 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 2")
 	}
 
-	if len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 1 {
-		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 1")
-	}
-
-	if len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 1 {
-		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 1")
+	if len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 0 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 0")
 	}
 
 }
