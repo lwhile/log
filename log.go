@@ -267,57 +267,63 @@ func AddSentryHookWithTag(dsn string, tags map[string]string, levels ...Level) e
 }
 
 // AddRotateHook will add a rotate hook to baseLogger
-func AddRotateHook(path string, level Level, maxAge, rotateTime time.Duration, format string) error {
-	writer, err := rotatelogs.New(
-		fmt.Sprintf("%s.%s.%s", path, level.String(), format), rotatelogs.WithLinkName(path),
-		rotatelogs.WithMaxAge(maxAge),
-		rotatelogs.WithRotationTime(rotateTime),
-	)
-	if err != nil {
-		return err
+func AddRotateHook(path string, maxAge, rotateTime time.Duration, format string, levels ...Level) error {
+	for _, level := range levels {
+		writer, err := rotatelogs.New(
+			fmt.Sprintf("%s.%s.%s", path, level.String(), format), rotatelogs.WithLinkName(path),
+			rotatelogs.WithMaxAge(maxAge),
+			rotatelogs.WithRotationTime(rotateTime),
+		)
+		if err != nil {
+			return err
+		}
+
+		writeMap := getWriteMap(level, writer)
+
+		hook := lfshook.NewHook(writeMap)
+
+		baseLogger.entry.Logger.Hooks.Add(hook)
 	}
-
-	writeMap := getWriteMap(level, writer)
-
-	hook := lfshook.NewHook(writeMap)
-
-	baseLogger.entry.Logger.Hooks.Add(hook)
 	return nil
 }
 
 // AddRotateHookByDay will add a rotate hook to baseLogger rotating by day
-func AddRotateHookByDay(path string, level Level, maxAge, rotateDay int) error {
-	writer, err := rotatelogs.New(
-		fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d"), rotatelogs.WithLinkName(path),
-		rotatelogs.WithMaxAge(time.Duration(maxAge)*time.Hour*24),
-		rotatelogs.WithRotationTime(time.Duration(rotateDay)*time.Hour*24),
-	)
-	if err != nil {
-		return err
+func AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error {
+	for _, level := range levels {
+		writer, err := rotatelogs.New(
+			fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d"), rotatelogs.WithLinkName(path),
+			rotatelogs.WithMaxAge(time.Duration(maxAge)*time.Hour*24),
+			rotatelogs.WithRotationTime(time.Duration(rotateDay)*time.Hour*24),
+		)
+		if err != nil {
+			return err
+		}
+
+		writeMap := getWriteMap(level, writer)
+
+		hook := lfshook.NewHook(writeMap)
+
+		baseLogger.entry.Logger.Hooks.Add(hook)
 	}
-
-	writeMap := getWriteMap(level, writer)
-
-	hook := lfshook.NewHook(writeMap)
-
-	baseLogger.entry.Logger.Hooks.Add(hook)
 	return nil
 }
 
 // AddRotateHookByHour will add a rotate hook to baseLogger rotating by hour
-func AddRotateHookByHour(path string, level Level, maxAge, rotateHour int) error {
-	writer, err := rotatelogs.New(
-		fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d@%H:%M"), rotatelogs.WithLinkName(path),
-		rotatelogs.WithMaxAge(time.Duration(maxAge)*time.Hour),
-		rotatelogs.WithRotationTime(time.Duration(maxAge)*time.Hour),
-	)
-	if err != nil {
-		return err
-	}
+func AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error {
+	for _, level := range levels {
+		writer, err := rotatelogs.New(
+			fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d@%H:%M"), rotatelogs.WithLinkName(path),
+			rotatelogs.WithMaxAge(time.Duration(maxAge)*time.Hour),
+			rotatelogs.WithRotationTime(time.Duration(maxAge)*time.Hour),
+		)
+		if err != nil {
+			return err
+		}
 
-	writeMap := getWriteMap(level, writer)
-	hook := lfshook.NewHook(writeMap)
-	baseLogger.entry.Logger.Hooks.Add(hook)
+		writeMap := getWriteMap(level, writer)
+		hook := lfshook.NewHook(writeMap)
+		baseLogger.entry.Logger.Hooks.Add(hook)
+	}
 	return nil
 }
 
