@@ -246,28 +246,40 @@ func convert2logrusLevels(levels ...Level) []logrus.Level {
 
 // AddSentryHook will add a sentry hook to baseLogger
 func AddSentryHook(dsn string, levels ...Level) error {
+	return addSentryHook(baseLogger, dsn, levels...)
+}
+
+func addSentryHook(l logger, dsn string, levels ...Level) error {
 	ls := convert2logrusLevels(levels...)
 	hook, err := logrus_sentry.NewSentryHook(dsn, ls)
 	if err != nil {
 		return err
 	}
-	baseLogger.entry.Logger.Hooks.Add(hook)
+	l.entry.Logger.Hooks.Add(hook)
 	return nil
 }
 
 // AddSentryHookWithTag wii add a sentry hook with tag to baseLogger
 func AddSentryHookWithTag(dsn string, tags map[string]string, levels ...Level) error {
+	return addSentryHookWithTag(baseLogger, dsn, tags, levels...)
+}
+
+func addSentryHookWithTag(l logger, dsn string, tags map[string]string, levels ...Level) error {
 	ls := convert2logrusLevels(levels...)
 	hook, err := logrus_sentry.NewWithTagsSentryHook(dsn, tags, ls)
 	if err != nil {
 		return err
 	}
-	baseLogger.entry.Logger.Hooks.Add(hook)
+	l.entry.Logger.Hooks.Add(hook)
 	return nil
 }
 
 // AddRotateHook will add a rotate hook to baseLogger
 func AddRotateHook(path string, maxAge, rotateTime time.Duration, format string, levels ...Level) error {
+	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, levels...)
+}
+
+func addRotateHook(l logger, path string, maxAge, rotateTime time.Duration, format string, levels ...Level) error {
 	for _, level := range levels {
 		writer, err := rotatelogs.New(
 			fmt.Sprintf("%s.%s.%s", path, level.String(), format), rotatelogs.WithLinkName(path),
@@ -282,13 +294,17 @@ func AddRotateHook(path string, maxAge, rotateTime time.Duration, format string,
 
 		hook := lfshook.NewHook(writeMap)
 
-		baseLogger.entry.Logger.Hooks.Add(hook)
+		l.entry.Logger.Hooks.Add(hook)
 	}
 	return nil
 }
 
 // AddRotateHookByDay will add a rotate hook to baseLogger rotating by day
 func AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error {
+	return addRotateHookByDay(baseLogger, path, maxAge, rotateDay, levels...)
+}
+
+func addRotateHookByDay(l logger, path string, maxAge, rotateDay int, levels ...Level) error {
 	for _, level := range levels {
 		writer, err := rotatelogs.New(
 			fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d"), rotatelogs.WithLinkName(path),
@@ -303,16 +319,21 @@ func AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) err
 
 		hook := lfshook.NewHook(writeMap)
 
-		baseLogger.entry.Logger.Hooks.Add(hook)
+		l.entry.Logger.Hooks.Add(hook)
 	}
 	return nil
 }
 
 // AddRotateHookByHour will add a rotate hook to baseLogger rotating by hour
 func AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error {
+	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, levels...)
+}
+
+// AddRotateHookByHour will add a rotate hook to baseLogger rotating by hour
+func addRotateHookByHour(l logger, path string, maxAge, rotateHour int, levels ...Level) error {
 	for _, level := range levels {
 		writer, err := rotatelogs.New(
-			fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d@%H:%M"), rotatelogs.WithLinkName(path),
+			fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d@%H:00"), rotatelogs.WithLinkName(path),
 			rotatelogs.WithMaxAge(time.Duration(maxAge)*time.Hour),
 			rotatelogs.WithRotationTime(time.Duration(maxAge)*time.Hour),
 		)
@@ -322,7 +343,7 @@ func AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) e
 
 		writeMap := getWriteMap(level, writer)
 		hook := lfshook.NewHook(writeMap)
-		baseLogger.entry.Logger.Hooks.Add(hook)
+		l.entry.Logger.Hooks.Add(hook)
 	}
 	return nil
 }
@@ -433,6 +454,18 @@ func (l logger) Fatalln(args ...interface{}) {
 // Fatalf logs a message at level Fatal on the standard logger.
 func (l logger) Fatalf(format string, args ...interface{}) {
 	l.sourced().Fatalf(format, args...)
+}
+
+func (l logger) AddSentryHook(dsn string, levels ...Level) error {
+	return addSentryHook(l, dsn, levels...)
+}
+
+func (l logger) AddSentryHookWithTag(dsn string, tags map[string]string, levels ...Level) error {
+	return addSentryHookWithTag(l, dsn, tags, levels...)
+}
+
+func (l logger) AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error {
+	return addRotateHookByDay(l, path, maxAge, rotateDay, levels...)
 }
 
 // NewLogger returns a new Logger logging to out.
