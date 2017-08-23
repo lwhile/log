@@ -162,6 +162,12 @@ type Logger interface {
 	Fatalf(string, ...interface{})
 
 	With(key string, value interface{}) Logger
+
+	AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error
+	AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error
+
+	AddSentryHook(dsn string, levels ...Level) error
+	AddSentryHookWithTag(dsn string, tags map[string]string, levels ...Level) error
 }
 
 type logger struct {
@@ -466,6 +472,10 @@ func (l logger) AddSentryHookWithTag(dsn string, tags map[string]string, levels 
 
 func (l logger) AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error {
 	return addRotateHookByDay(l, path, maxAge, rotateDay, levels...)
+}
+
+func (l logger) AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error {
+	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, levels...)
 }
 
 // NewLogger returns a new Logger logging to out.
