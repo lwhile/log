@@ -34,26 +34,26 @@ import (
 )
 
 func main() {
-    
-    // 添加以小时为单位进行日志切分的hook
-    // 倒数第二个参数为日志的保留时间,单位为小时
-    // 倒数第一个参数为日志的分割周期,单位为小时
-    // log.ForverHour 表示保留所有日志
-    err := log.AddRotateHookByHour("log.log", log.InfoLevel, log.ForverHour, 1)
+    // 将日志保存到文件log.log, 并且日志的保存时间为永久, 日志的切分频率为1小时, 触发的日志级别为 Info 和 Error
+    err := log.AddRotateHookByHour("log.log", log.ForverHour, 1, log.InfoLevel, log.ErrorLevel)
     if err != nil {
         log.Error("fail to add rotate hook to logrus")
     }
 
-    // 添加以小时为单位进行日志切分的hook
-    // 倒数第二个参数为日志的保留时间,单位为天
-    // 倒数第一个参数为日志的分割周期,单位为天
-    // log.ForverDay 表示保留所有日志
-	err = log.AddRotateHookByDay("log.log", log.InfoLevel, log.ForverDay, 1)
+    // 将日志保存到文件log.log, 并且日志的保存时间为永久, 日志的切分频率为1天, 触发的日志级别为 Info 和 Error
+	err = log.AddRotateHookByDay("log.log", log.ForverDay, 1, log.InfoLevel, log.ErrorLevel)
     if err != nil {
         log.Error("fail to add rotate hook to logrus")
     }
+
+    // 将日志保存到文件log.log, 并且日志的保存时间为10分钟, 日志的切分频率为10分钟, 触发的日志级别为 Info 和 Error
+    err = log.AddRotateHook("log.log", time.Minute*10, time.Minute*10, "%Y-%m-%d@%H:%M", log.InfoLevel, log.ErrorLevel)
+	if err != nil {
+		log.Error("fail to add rotate hook to logrus")
+	}
 
     log.Info("log")
+    log.Error("log")
 }
 
 ```
