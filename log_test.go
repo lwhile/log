@@ -1,9 +1,14 @@
 package log
 
 import (
+	"fmt"
+	"log"
+	"os"
 	"reflect"
 	"testing"
 	"time"
+
+	"path"
 
 	"github.com/sirupsen/logrus"
 )
@@ -107,6 +112,21 @@ func Test_convert2logrusLevels(t *testing.T) {
 
 	if reflect.TypeOf(lglels[2]) != reflect.TypeOf(logrus.FatalLevel) {
 		t.Fatal()
+	}
+}
+
+func Test_createDir(t *testing.T) {
+	targetPath := path.Join("/tmp", fmt.Sprintf("%d", time.Now().Unix()), fmt.Sprintf("%d", time.Now().Unix())+".log")
+	log.Println("targetPath:", targetPath)
+	err := createDir(targetPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	targetDir := path.Dir(targetPath)
+	err = os.RemoveAll(targetDir)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 

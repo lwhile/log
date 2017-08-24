@@ -21,6 +21,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"path"
 	"runtime"
 	"strconv"
 	"strings"
@@ -303,6 +304,9 @@ func AddRotateHook(path string, maxAge, rotateTime time.Duration, format string,
 }
 
 func addRotateHook(l logger, path string, maxAge, rotateTime time.Duration, format string, levels ...Level) error {
+	if err := createDir(path); err != nil {
+		return err
+	}
 	for _, level := range levels {
 		writer, err := rotatelogs.New(
 			fmt.Sprintf("%s.%s.%s", path, level.String(), format), rotatelogs.WithLinkName(path),
@@ -328,6 +332,9 @@ func AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) err
 }
 
 func addRotateHookByDay(l logger, path string, maxAge, rotateDay int, levels ...Level) error {
+	if err := createDir(path); err != nil {
+		return err
+	}
 	for _, level := range levels {
 		writer, err := rotatelogs.New(
 			fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d"), rotatelogs.WithLinkName(path),
@@ -354,6 +361,9 @@ func AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) e
 
 // AddRotateHookByHour will add a rotate hook to baseLogger rotating by hour
 func addRotateHookByHour(l logger, path string, maxAge, rotateHour int, levels ...Level) error {
+	if err := createDir(path); err != nil {
+		return err
+	}
 	for _, level := range levels {
 		writer, err := rotatelogs.New(
 			fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d@%H:00"), rotatelogs.WithLinkName(path),
@@ -604,4 +614,13 @@ func (errorLogWriter) Write(b []byte) (int, error) {
 // in the ErrorLog field of an http.Server to log HTTP server errors.
 func NewErrorLogger() *log.Logger {
 	return log.New(&errorLogWriter{}, "", 0)
+}
+
+func createDir(filePath string) error {
+	dir := path.Dir(filePath)
+	if dir == "" {
+		return fmt.Errorf("Failed to create dir")
+	}
+
+	return os.MkdirAll(dir, 0770)
 }
