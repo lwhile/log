@@ -168,6 +168,8 @@ type Logger interface {
 
 	AddSentryHook(dsn string, levels ...Level) error
 	AddSentryHookWithTag(dsn string, tags map[string]string, levels ...Level) error
+
+	AddAsyncSentryHook(dsn string, levels ...Level) error
 }
 
 type logger struct {
@@ -253,6 +255,21 @@ func convert2logrusLevels(levels ...Level) []logrus.Level {
 // AddSentryHook will add a sentry hook to baseLogger
 func AddSentryHook(dsn string, levels ...Level) error {
 	return addSentryHook(baseLogger, dsn, levels...)
+}
+
+// AddAsyncSentryHook will add a async sentry hook to base logger
+func AddAsyncSentryHook(dsn string, levels ...Level) error {
+	return addAsyncSentryHook(baseLogger, dsn, levels...)
+}
+
+func addAsyncSentryHook(l logger, dsn string, levels ...Level) error {
+	ls := convert2logrusLevels(levels...)
+	hook, err := logrus_sentry.NewAsyncSentryHook(dsn, ls)
+	if err != nil {
+		return err
+	}
+	l.entry.Logger.Hooks.Add(hook)
+	return nil
 }
 
 func addSentryHook(l logger, dsn string, levels ...Level) error {
@@ -476,6 +493,10 @@ func (l logger) AddRotateHookByDay(path string, maxAge, rotateDay int, levels ..
 
 func (l logger) AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error {
 	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, levels...)
+}
+
+func (l logger) AddAsyncSentryHook(dsn string, levels ...Level) error {
+	return addAsyncSentryHook(l, dsn, levels...)
 }
 
 // NewLogger returns a new Logger logging to out.
