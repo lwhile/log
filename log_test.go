@@ -56,6 +56,41 @@ func TestAddHooks(t *testing.T) {
 		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 0")
 	}
 
+	// test add a async sentry  hook
+	err = AddAsyncSentryHook(sentryDSN, InfoLevel)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(baseLogger.entry.Logger.Hooks[logrus.InfoLevel]) != 3 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.InfoLevel]) != 2")
+	}
+
+	if len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 2 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 2")
+	}
+
+	if len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 0 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 0")
+	}
+
+	err = AddAsyncSentryHook(sentryDSN, ErrorLevel)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(baseLogger.entry.Logger.Hooks[logrus.InfoLevel]) != 3 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.InfoLevel]) != 2")
+	}
+
+	if len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 3 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 2")
+	}
+
+	if len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 0 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 0")
+	}
+
 }
 
 func Test_convert2logrusLevels(t *testing.T) {
