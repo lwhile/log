@@ -36,7 +36,7 @@ func main() {
 
 ```
 
-添加一个不带标签的 sentry hook
+添加一个sentry hook
 
 ```go
 func main() {
@@ -45,6 +45,21 @@ func main() {
     // 函数第一个参数为 sentry 的数据源地址
     // 该地址可以从 http://192.168.1.100:9000/sentry/ 获取
     err := log.AddSentryHook("http://ac5818c072e249ee9388d3610f641da8:815c23ee6cff4bc49b2b83db37144c98@192.168.1.100:9000/4", log.InfoLevel,log.ErrorLevel)
+    if err != nil {
+        log.Error("fail to add sentry hook to logrus")
+    }
+
+    // This log will sent to sentry
+    log.Info("log")
+}
+```
+
+添加一个异步的sentry hook
+
+```go 
+func main() {
+    // 在全局的logger中添加一个 sentry 的异步hook
+    err := log.AddAsyncSentryHook("http://ac5818c072e249ee9388d3610f641da8:815c23ee6cff4bc49b2b83db37144c98@192.168.1.100:9000/4", log.InfoLevel,log.ErrorLevel)
     if err != nil {
         log.Error("fail to add sentry hook to logrus")
     }
