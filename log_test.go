@@ -58,10 +58,6 @@ func TestAddHooks(t *testing.T) {
 
 }
 
-func Test_logger_AddHooks(t *testing.T) {
-
-}
-
 func Test_convert2logrusLevels(t *testing.T) {
 	levels := []Level{InfoLevel, WarnLevel, ErrorLevel, FatalLevel}
 	lglels := convert2logrusLevels(levels...)
