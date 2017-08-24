@@ -27,6 +27,8 @@ import (
 	"strings"
 	"time"
 
+	"bytes"
+
 	"github.com/evalphobia/logrus_sentry"
 	"github.com/lestrrat/go-file-rotatelogs"
 	"github.com/rifflock/lfshook"
@@ -47,6 +49,72 @@ const (
 func (f levelFlag) String() string {
 	return fmt.Sprintf("%q", string(f))
 }
+
+// The Formatter interface is used to implement a custom Formatter. It takes an
+// `Entry`. It exposes all the fields, including the default ones:
+//
+// * `entry.Data["msg"]`. The message passed from Info, Warn, Error ..
+// * `entry.Data["time"]`. The timestamp.
+// * `entry.Data["level"]. The level the entry was logged at.
+//
+// Any additional fields added with `WithField` or `WithFields` are also in
+// `entry.Data`. Format is expected to return an array of bytes which are then
+// logged to `logger.Out`.
+type Formatter interface {
+	logrus.Formatter
+}
+
+// PFormatter :
+type PFormatter struct {
+}
+
+// Format implement Formatter interface
+// time [Level][source] message
+func (p *PFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	var b bytes.Buffer
+
+	// preFixF := "%s [%s][%s] "
+	// prefix := fmt.Sprintf(preFixF, entry.Time.Format("2006-01-02 15:04:05"), entry.Level.String(), entry.Data["source"].(string))
+	// write time to buffer
+	if _, err := b.WriteString(entry.Time.Format("2006-01-02 15:04:05")); err != nil {
+		return nil, nil
+	}
+
+	if _, err := b.WriteString(" ["); err != nil {
+		return nil, err
+	}
+
+	if _, err := b.WriteString(entry.Level.String()); err != nil {
+		return nil, err
+	}
+
+	if _, err := b.WriteString("]["); err != nil {
+		return nil, err
+	}
+
+	if _, err := b.WriteString(entry.Data["source"].(string)); err != nil {
+		return nil, err
+	}
+
+	if _, err := b.WriteString("] "); err != nil {
+		return nil, err
+	}
+
+	if _, err := b.WriteString(entry.Message); err != nil {
+		return nil, err
+	}
+
+	if _, err := b.WriteString("\n"); err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
+}
+
+// PrefixedFormatter is a default variable that exported to package user
+var PrefixedFormatter = &PFormatter{}
+
+var dftFormatter = &logrus.TextFormatter{DisableColors: true}
 
 // Set implements flag.Value.
 func (f levelFlag) Set(level string) error {
@@ -191,6 +259,7 @@ func (l logger) sourced() *logrus.Entry {
 	return l.entry.WithField("source", fmt.Sprintf("%s:%d", file, line))
 }
 
+// Level represent trigger level of log
 type Level logrus.Level
 
 const (
@@ -320,7 +389,6 @@ func addRotateHook(l logger, path string, maxAge, rotateTime time.Duration, form
 		writeMap := getWriteMap(level, writer)
 
 		hook := lfshook.NewHook(writeMap)
-
 		l.entry.Logger.Hooks.Add(hook)
 	}
 	return nil
@@ -328,10 +396,15 @@ func addRotateHook(l logger, path string, maxAge, rotateTime time.Duration, form
 
 // AddRotateHookByDay will add a rotate hook to baseLogger rotating by day
 func AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error {
-	return addRotateHookByDay(baseLogger, path, maxAge, rotateDay, levels...)
+	return addRotateHookByDay(baseLogger, path, maxAge, rotateDay, dftFormatter, levels...)
 }
 
-func addRotateHookByDay(l logger, path string, maxAge, rotateDay int, levels ...Level) error {
+// AddRotateHookByDayWithFormatter will add a rotate hook with formatter to baseLogger rotating by day
+func AddRotateHookByDayWithFormatter(path string, maxAge, rotateDay int, formatter Formatter, levels ...Level) error {
+	return addRotateHookByDay(baseLogger, path, maxAge, rotateDay, formatter, levels...)
+}
+
+func addRotateHookByDay(l logger, path string, maxAge, rotateDay int, formatter Formatter, levels ...Level) error {
 	if err := createDir(path); err != nil {
 		return err
 	}
@@ -348,6 +421,7 @@ func addRotateHookByDay(l logger, path string, maxAge, rotateDay int, levels ...
 		writeMap := getWriteMap(level, writer)
 
 		hook := lfshook.NewHook(writeMap)
+		hook.SetFormatter(formatter)
 
 		l.entry.Logger.Hooks.Add(hook)
 	}
@@ -498,7 +572,7 @@ func (l logger) AddSentryHookWithTag(dsn string, tags map[string]string, levels 
 }
 
 func (l logger) AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error {
-	return addRotateHookByDay(l, path, maxAge, rotateDay, levels...)
+	return addRotateHookByDay(l, path, maxAge, rotateDay, dftFormatter, levels...)
 }
 
 func (l logger) AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error {
