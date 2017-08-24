@@ -102,8 +102,6 @@ func main() {
 
 - 添加hook的几个函数可以传入不定个log.Level类型的参数, hook只会对相应的log.Level级别生效.不会因为某些Level比另一些Level级别高也会生效.
 
-- 添加 sentry 的 hook 会返回一个 error 变量, 这和添加日志 hook 不一样
-
 - 目前只有我们公司内的环境有装 sentry, 所以在你的业务代码里需要判断配置文件是否有 sentry 数据源, 如果有才添加 sentry 的 hook
 
 
