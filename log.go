@@ -225,7 +225,7 @@ var baseLogger = logger{entry: logrus.NewEntry(origLogger)}
 
 func newOrigLogger() *logrus.Logger {
 	return &logrus.Logger{
-		Out:       os.Stderr,
+		Out:       os.Stdout,
 		Formatter: new(logrus.TextFormatter),
 		Hooks:     make(logrus.LevelHooks),
 		Level:     logrus.DebugLevel,
@@ -258,6 +258,16 @@ func AddSentryHook(dsn string, levels ...Level) error {
 	return addSentryHook(baseLogger, dsn, levels...)
 }
 
+func addSentryHook(l logger, dsn string, levels ...Level) error {
+	ls := convert2logrusLevels(levels...)
+	hook, err := logrus_sentry.NewSentryHook(dsn, ls)
+	if err != nil {
+		return err
+	}
+	l.entry.Logger.Hooks.Add(hook)
+	return nil
+}
+
 // AddAsyncSentryHook will add a async sentry hook to base logger
 func AddAsyncSentryHook(dsn string, levels ...Level) error {
 	return addAsyncSentryHook(baseLogger, dsn, levels...)
@@ -266,16 +276,6 @@ func AddAsyncSentryHook(dsn string, levels ...Level) error {
 func addAsyncSentryHook(l logger, dsn string, levels ...Level) error {
 	ls := convert2logrusLevels(levels...)
 	hook, err := logrus_sentry.NewAsyncSentryHook(dsn, ls)
-	if err != nil {
-		return err
-	}
-	l.entry.Logger.Hooks.Add(hook)
-	return nil
-}
-
-func addSentryHook(l logger, dsn string, levels ...Level) error {
-	ls := convert2logrusLevels(levels...)
-	hook, err := logrus_sentry.NewSentryHook(dsn, ls)
 	if err != nil {
 		return err
 	}
