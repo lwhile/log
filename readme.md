@@ -105,10 +105,48 @@ func main() {
 - 目前只有我们公司内的环境有装 sentry, 所以在你的业务代码里需要判断配置文件是否有 sentry 数据源, 如果有才添加 sentry 的 hook
 
 
-## 维护状态
+## Master分支状态
 
-该包已经通过维护者的测试, 等待更多使用者的反馈
+---
 
+v0.6 (2017.8.25)
+
+- 日志切片的hook增加了几个新的方法:
+
+```go 
+AddRotateHookWithFormatter(path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, levels ...Level) error
+
+AddRotateHookByDayWithFormatter(path string, maxAge, rotateDay int, formatter Formatter, levels ...Level) error
+
+AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour int, formatter Formatter, levels ...Level) error
+```
+
+同时增加了内置的Formatter ```PrefixedFormatter```, 该Formatter实现了如下格式的输出
+
+```
+time [Level][source] log content
+```
+
+- 增加设置日志输出的方法:
+
+```go
+SetOutput(w io.Writer)
+```
+
+同时增加了输出到空设备的NullOutput变量, 它实现了 io.Writer 接口
+若不想输出到磁盘文件外的其他任何地方, 调用如下代码即可:
+
+```go
+log.SetOutput(log.NullOutput)
+```
+
+---
+
+v0.5 (2017.8.24) 
+
+基本功能测试版
+
+---
 
 ## 维护者 
 
