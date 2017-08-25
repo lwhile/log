@@ -65,8 +65,7 @@ type Formatter interface {
 }
 
 // PFormatter :
-type PFormatter struct {
-}
+type PFormatter struct{}
 
 // Format implement Formatter interface
 // time [Level][source] message
@@ -96,6 +95,15 @@ func (p *PFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 var PrefixedFormatter = &PFormatter{}
 
 var dftFormatter = &logrus.TextFormatter{DisableColors: true}
+
+type nullOutput struct{}
+
+// NullOutput implement io.Writer interface but write nothing
+var NullOutput = &nullOutput{}
+
+func (nw *nullOutput) Write(p []byte) (int, error) {
+	return 0, nil
+}
 
 // Set implements flag.Value.
 func (f levelFlag) Set(level string) error {
@@ -226,6 +234,8 @@ type Logger interface {
 	AddSentryHookWithTag(dsn string, tags map[string]string, levels ...Level) error
 
 	AddAsyncSentryHook(dsn string, levels ...Level) error
+
+	SetOutput(w io.Writer)
 }
 
 type logger struct {
@@ -381,6 +391,7 @@ func addRotateHook(l logger, path string, maxAge, rotateTime time.Duration, form
 		writeMap := getWriteMap(level, writer)
 
 		hook := lfshook.NewHook(writeMap)
+		hook.SetFormatter(formatter)
 		l.entry.Logger.Hooks.Add(hook)
 	}
 	return nil
@@ -447,9 +458,15 @@ func addRotateHookByHour(l logger, path string, maxAge, rotateHour int, formatte
 
 		writeMap := getWriteMap(level, writer)
 		hook := lfshook.NewHook(writeMap)
+		hook.SetFormatter(formatter)
 		l.entry.Logger.Hooks.Add(hook)
 	}
 	return nil
+}
+
+// SetOutput set output writer of base logger object
+func SetOutput(w io.Writer) {
+	baseLogger.SetOutput(w)
 }
 
 func getWriteMap(level Level, writer *rotatelogs.RotateLogs) lfshook.WriterMap {
@@ -594,6 +611,10 @@ func (l logger) AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour
 
 func (l logger) AddAsyncSentryHook(dsn string, levels ...Level) error {
 	return addAsyncSentryHook(l, dsn, levels...)
+}
+
+func (l logger) SetOutput(w io.Writer) {
+	l.entry.Logger.Out = w
 }
 
 // NewLogger returns a new Logger logging to out.
