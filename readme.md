@@ -127,6 +127,16 @@ AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour int, formatter 
 time [Level][source] log content
 ```
 
+使用例子:
+
+```go
+
+err := AddRotateHookByDayWithFormatter("log.log", 365, 1, log.PrefixedFormatter, log.InfoLevel, log.ErrorLevel) 
+if err != nil {
+    log.Error("fail to add a hook")
+}
+```
+
 - 增加设置日志输出的方法:
 
 ```go
