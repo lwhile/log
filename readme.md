@@ -150,6 +150,8 @@ SetOutput(w io.Writer)
 log.SetOutput(log.NullOutput)
 ```
 
+- 日志文件不存在时,会自动创建所在的路径中包含的目录
+
 ---
 
 ### v0.5 (2017.8.24) 
