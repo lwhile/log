@@ -213,8 +213,14 @@ type Logger interface {
 
 	With(key string, value interface{}) Logger
 
+	AddRotateHook(path string, maxAge, rotateTime time.Duration, format string, levels ...Level) error
+	AddRotateHookWithFormatter(path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, levels ...Level) error
+
 	AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error
+	AddRotateHookByDayWithFormatter(path string, maxAge, rotateDay int, formatter Formatter, levels ...Level) error
+
 	AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error
+	AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour int, formatter Formatter, levels ...Level) error
 
 	AddSentryHook(dsn string, levels ...Level) error
 	AddSentryHookWithTag(dsn string, tags map[string]string, levels ...Level) error
@@ -350,10 +356,15 @@ func addSentryHookWithTag(l logger, dsn string, tags map[string]string, levels .
 
 // AddRotateHook will add a rotate hook to baseLogger
 func AddRotateHook(path string, maxAge, rotateTime time.Duration, format string, levels ...Level) error {
-	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, levels...)
+	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, dftFormatter, levels...)
 }
 
-func addRotateHook(l logger, path string, maxAge, rotateTime time.Duration, format string, levels ...Level) error {
+// AddRotateHookWithFormatter will add a rotate hook to baseLogger with formatter
+func AddRotateHookWithFormatter(path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, levels ...Level) error {
+	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, formatter, levels...)
+}
+
+func addRotateHook(l logger, path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, levels ...Level) error {
 	if err := createDir(path); err != nil {
 		return err
 	}
@@ -411,11 +422,16 @@ func addRotateHookByDay(l logger, path string, maxAge, rotateDay int, formatter 
 
 // AddRotateHookByHour will add a rotate hook to baseLogger rotating by hour
 func AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error {
-	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, levels...)
+	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, dftFormatter, levels...)
+}
+
+// AddRotateHookByHourWithFormatter will add a rotate hook to baseLogger rotating by hour with formatter
+func AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour int, formatter Formatter, levels ...Level) error {
+	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, formatter, levels...)
 }
 
 // AddRotateHookByHour will add a rotate hook to baseLogger rotating by hour
-func addRotateHookByHour(l logger, path string, maxAge, rotateHour int, levels ...Level) error {
+func addRotateHookByHour(l logger, path string, maxAge, rotateHour int, formatter Formatter, levels ...Level) error {
 	if err := createDir(path); err != nil {
 		return err
 	}
@@ -552,12 +568,28 @@ func (l logger) AddSentryHookWithTag(dsn string, tags map[string]string, levels 
 	return addSentryHookWithTag(l, dsn, tags, levels...)
 }
 
+func (l logger) AddRotateHook(path string, maxAge, rotateTime time.Duration, format string, levels ...Level) error {
+	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, dftFormatter, levels...)
+}
+
+func (l logger) AddRotateHookWithFormatter(path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, levels ...Level) error {
+	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, formatter, levels...)
+}
+
 func (l logger) AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error {
 	return addRotateHookByDay(l, path, maxAge, rotateDay, dftFormatter, levels...)
 }
 
+func (l logger) AddRotateHookByDayWithFormatter(path string, maxAge, rotateDay int, formatter Formatter, levels ...Level) error {
+	return addRotateHookByHour(l, path, maxAge, rotateDay, formatter, levels...)
+}
+
 func (l logger) AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error {
-	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, levels...)
+	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, dftFormatter, levels...)
+}
+
+func (l logger) AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour int, formatter Formatter, levels ...Level) error {
+	return addRotateHookByHour(l, path, maxAge, rotateHour, formatter, levels...)
 }
 
 func (l logger) AddAsyncSentryHook(dsn string, levels ...Level) error {
