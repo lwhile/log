@@ -73,33 +73,14 @@ type PFormatter struct {
 func (p *PFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var b bytes.Buffer
 
-	// preFixF := "%s [%s][%s] "
-	// prefix := fmt.Sprintf(preFixF, entry.Time.Format("2006-01-02 15:04:05"), entry.Level.String(), entry.Data["source"].(string))
-	// write time to buffer
-	if _, err := b.WriteString(entry.Time.Format("2006-01-02 15:04:05")); err != nil {
-		return nil, nil
-	}
-
-	if _, err := b.WriteString(" ["); err != nil {
+	// write prefix message to buffer
+	preFixFmt := "%s [%s][%s] "
+	prefix := fmt.Sprintf(preFixFmt, entry.Time.Format("2006-01-02 15:04:05"), entry.Level.String(), entry.Data["source"].(string))
+	if _, err := b.WriteString(prefix); err != nil {
 		return nil, err
 	}
 
-	if _, err := b.WriteString(entry.Level.String()); err != nil {
-		return nil, err
-	}
-
-	if _, err := b.WriteString("]["); err != nil {
-		return nil, err
-	}
-
-	if _, err := b.WriteString(entry.Data["source"].(string)); err != nil {
-		return nil, err
-	}
-
-	if _, err := b.WriteString("] "); err != nil {
-		return nil, err
-	}
-
+	// write log content to buffer
 	if _, err := b.WriteString(entry.Message); err != nil {
 		return nil, err
 	}
