@@ -96,6 +96,19 @@ func TestAddHooks(t *testing.T) {
 		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 0")
 	}
 
+	AddAsyncGraylogHook("", 0, nil, InfoLevel, ErrorLevel)
+	if len(baseLogger.entry.Logger.Hooks[logrus.InfoLevel]) != 4 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.InfoLevel]) != 2")
+	}
+
+	if len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 4 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.ErrorLevel]) != 2")
+	}
+
+	if len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 0 {
+		t.Fatal("len(baseLogger.entry.Logger.Hooks[logrus.FatalLevel]) != 0")
+	}
+
 }
 
 func Test_convert2logrusLevels(t *testing.T) {
