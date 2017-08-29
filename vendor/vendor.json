@@ -1,0 +1,91 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "94NefBZ4UTXLh9WOuqAdciK1Oew=",
+			"path": "github.com/certifi/gocertifi",
+			"revision": "3fd9e1adb12b72d2f3f82191d49be9b93c69f67c",
+			"revisionTime": "2017-07-27T15:51:24Z"
+		},
+		{
+			"checksumSHA1": "AvmZ8yrd1V2lVndKdbSJTV+V1CM=",
+			"path": "github.com/evalphobia/logrus_sentry",
+			"revision": "9f8f2d05a621e616d9341ac75374eb8402ae0630",
+			"revisionTime": "2017-06-14T01:42:53Z"
+		},
+		{
+			"checksumSHA1": "v80i7OW4AhVGbebGd7oTyfpV/Oc=",
+			"path": "github.com/getsentry/raven-go",
+			"revision": "d175f85701dfbf44cb0510114c9943e665e60907",
+			"revisionTime": "2017-03-30T19:40:04Z"
+		},
+		{
+			"checksumSHA1": "kH0oZPicVlrImHntiQKpgJAyABs=",
+			"path": "github.com/lestrrat/go-file-rotatelogs",
+			"revision": "9df8b44f21785240553882138c5df2e9cc1db910",
+			"revisionTime": "2017-05-01T06:38:31Z"
+		},
+		{
+			"checksumSHA1": "zN17KECTZM56xvdBURLqpW1duYg=",
+			"path": "github.com/lestrrat/go-strftime",
+			"revision": "04ef93e285313c8978cbc7cad26d2aa7a9927451",
+			"revisionTime": "2017-01-13T11:20:00Z"
+		},
+		{
+			"checksumSHA1": "XqgdCfad7PXyrYM/niAcLp2M7Qw=",
+			"path": "github.com/lwhile/logrus-graylog-hook",
+			"revision": "a324ea6594e1a076ff7d05e5ad97037c2736b78c",
+			"revisionTime": "2017-08-29T03:20:14Z"
+		},
+		{
+			"checksumSHA1": "ynJSWoF6v+3zMnh9R0QmmG6iGV8=",
+			"path": "github.com/pkg/errors",
+			"revision": "bfd5150e4e41705ded2129ec33379de1cb90b513",
+			"revisionTime": "2017-02-27T22:00:37Z"
+		},
+		{
+			"checksumSHA1": "CXh5a3e3c5EY3MrsUQNkM/IQdVA=",
+			"path": "github.com/rifflock/lfshook",
+			"revision": "271f86636484f5892d5d85f8f0e6c77316bc2a49",
+			"revisionTime": "2017-07-13T17:37:21Z"
+		},
+		{
+			"checksumSHA1": "5+eS1Ticg5wkpsdNoPiST3OQcIg=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "f006c2ac4710855cf0f916dd6b77acf6b048dc6e",
+			"revisionTime": "2017-08-15T20:20:55Z"
+		},
+		{
+			"checksumSHA1": "xiderUuvye8Kpn7yX3niiJg32bE=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "728b753d0135da6801d45a38e6f43ff55779c5c2",
+			"revisionTime": "2017-01-24T01:46:54Z"
+		},
+		{
+			"checksumSHA1": "ArDa4bMPKzhiS1I7iioemBwZ6tE=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "f3918c30c5c2cb527c0b071a27c35120a6c0719a",
+			"revisionTime": "2017-04-05T16:58:12Z"
+		},
+		{
+			"checksumSHA1": "9YX4DNBhOM8krIjoT9eT2fnh1G0=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "f3918c30c5c2cb527c0b071a27c35120a6c0719a",
+			"revisionTime": "2017-04-05T16:58:12Z"
+		},
+		{
+			"checksumSHA1": "ZdFZFaXmCgEEaEhVPkyXrnhKhsg=",
+			"path": "golang.org/x/sys/windows/registry",
+			"revision": "f3918c30c5c2cb527c0b071a27c35120a6c0719a",
+			"revisionTime": "2017-04-05T16:58:12Z"
+		},
+		{
+			"checksumSHA1": "uVlUSSKplihZG7N+QJ6fzDZ4Kh8=",
+			"path": "golang.org/x/sys/windows/svc/eventlog",
+			"revision": "f3918c30c5c2cb527c0b071a27c35120a6c0719a",
+			"revisionTime": "2017-04-05T16:58:12Z"
+		}
+	],
+	"rootPath": "git.gzsunrun.cn/sunrunlib/log"
+}
