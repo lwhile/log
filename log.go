@@ -237,14 +237,15 @@ type Logger interface {
 	AddAsyncSentryHook(dsn string, levels ...Level) error
 
 	AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
-	//AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, bufferSize int, levels ...Level) error
+	AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
+	GrayAsyncHookFlush()
 
 	SetOutput(w io.Writer)
 }
 
 type logger struct {
-	entry *logrus.Entry
-	hooks map[string][]logrus.Hook
+	entry     *logrus.Entry
+	grayHooks []*graylog.GraylogHook
 }
 
 // sourced adds a source field to the logger that contains
@@ -471,32 +472,34 @@ func addRotateHookByHour(l logger, path string, maxAge, rotateHour int, formatte
 
 // AddGrayLogHook will add a sync graylog hook to base logger
 func AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error {
-	return addGrayLogHook(baseLogger, ip, port, extra, dftFormatter, levels...)
+	return addGrayLogHook(baseLogger, ip, port, extra, levels...)
 }
 
-func addGrayLogHook(l logger, ip string, port int, extra map[string]interface{}, formatter Formatter, levels ...Level) error {
+func addGrayLogHook(l logger, ip string, port int, extra map[string]interface{}, levels ...Level) error {
 	lgLevels := convert2logrusLevels(levels...)
 	hook := graylog.NewGraylogHook(fmt.Sprintf("%s:%d", ip, port), extra, lgLevels...)
 	l.entry.Logger.Hooks.Add(hook)
 	return nil
 }
 
-// // AddAsyncGraylogHook will add a sync graylog hook to base logger and will send log by asyncing
-// func AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, bufferSize int, levels ...Level) error {
-// 	return nil
-// }
+// AddAsyncGraylogHook will add a sync graylog hook to base logger and will send log by asyncing
+func AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error {
+	return addAsyncGraylogHook(baseLogger, ip, port, extra, levels...)
+}
 
-// func addAsyncGraylogHook(l logger, ip string, port int, extra map[string]interface{}, bufferSize int, levels ...Level) error {
-// 	lgLevels := convert2logrusLevels(levels...)
-// 	hook := graylog.NewAsyncGraylogHook(fmt.Sprintf("%s:%d", ip, port), extra, lgLevels...)
-// 	l.entry.Logger.Hooks.Add(hook)
+func addAsyncGraylogHook(l logger, ip string, port int, extra map[string]interface{}, levels ...Level) error {
+	lgLevels := convert2logrusLevels(levels...)
+	hook := graylog.NewAsyncGraylogHook(fmt.Sprintf("%s:%d", ip, port), extra, lgLevels...)
+	l.entry.Logger.Hooks.Add(hook)
+	return nil
+}
 
-// 	go func() {
-
-// 	}()
-
-// 	return nil
-// }
+// GrayAsyncHookFlush flush all async gray hook
+func GrayAsyncHookFlush() {
+	for _, h := range baseLogger.grayHooks {
+		h.Flush()
+	}
+}
 
 // SetOutput set output writer of base logger object
 func SetOutput(w io.Writer) {
@@ -649,7 +652,19 @@ func (l logger) AddAsyncSentryHook(dsn string, levels ...Level) error {
 
 // AddGrayLogHook will add a rotate hook to baseLogger
 func (l logger) AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error {
-	return addGrayLogHook(l, ip, port, extra, dftFormatter, levels...)
+	return addGrayLogHook(l, ip, port, extra, levels...)
+}
+
+// AddGrayLogHook will add a sync graylog hook to base logger
+func (l logger) AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error {
+	return addAsyncGraylogHook(l, ip, port, extra, levels...)
+}
+
+// GrayAsyncHookFlush flush all async gray hook
+func (l logger) GrayAsyncHookFlush() {
+	for _, h := range l.grayHooks {
+		h.Flush()
+	}
 }
 
 func (l logger) SetOutput(w io.Writer) {
@@ -660,14 +675,14 @@ func (l logger) SetOutput(w io.Writer) {
 func NewLogger(w io.Writer) Logger {
 	l := logrus.New()
 	l.Out = w
-	return logger{entry: logrus.NewEntry(l), hooks: make(map[string][]logrus.Hook)}
+	return logger{entry: logrus.NewEntry(l), grayHooks: make([]*graylog.GraylogHook, 0)}
 }
 
 // NewNopLogger returns a logger that discards all log messages.
 func NewNopLogger() Logger {
 	l := logrus.New()
 	l.Out = ioutil.Discard
-	return logger{entry: logrus.NewEntry(l)}
+	return logger{entry: logrus.NewEntry(l), grayHooks: make([]*graylog.GraylogHook, 0)}
 }
 
 // With adds a field to the logger.
