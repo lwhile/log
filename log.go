@@ -478,6 +478,7 @@ func AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ..
 func addGrayLogHook(l logger, ip string, port int, extra map[string]interface{}, levels ...Level) error {
 	lgLevels := convert2logrusLevels(levels...)
 	hook := graylog.NewGraylogHook(fmt.Sprintf("%s:%d", ip, port), extra, lgLevels...)
+	l.grayHooks = append(l.grayHooks, hook)
 	l.entry.Logger.Hooks.Add(hook)
 	return nil
 }
@@ -490,6 +491,7 @@ func AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, leve
 func addAsyncGraylogHook(l logger, ip string, port int, extra map[string]interface{}, levels ...Level) error {
 	lgLevels := convert2logrusLevels(levels...)
 	hook := graylog.NewAsyncGraylogHook(fmt.Sprintf("%s:%d", ip, port), extra, lgLevels...)
+	l.grayHooks = append(l.grayHooks, hook)
 	l.entry.Logger.Hooks.Add(hook)
 	return nil
 }
