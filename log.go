@@ -31,6 +31,7 @@ import (
 
 	"github.com/evalphobia/logrus_sentry"
 	"github.com/lestrrat/go-file-rotatelogs"
+	"github.com/lwhile/logrus-graylog-hook"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 )
@@ -235,11 +236,15 @@ type Logger interface {
 
 	AddAsyncSentryHook(dsn string, levels ...Level) error
 
+	AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
+	//AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, bufferSize int, levels ...Level) error
+
 	SetOutput(w io.Writer)
 }
 
 type logger struct {
 	entry *logrus.Entry
+	hooks map[string][]logrus.Hook
 }
 
 // sourced adds a source field to the logger that contains
@@ -464,6 +469,35 @@ func addRotateHookByHour(l logger, path string, maxAge, rotateHour int, formatte
 	return nil
 }
 
+// AddGrayLogHook will add a sync graylog hook to base logger
+func AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error {
+	return addGrayLogHook(baseLogger, ip, port, extra, dftFormatter, levels...)
+}
+
+func addGrayLogHook(l logger, ip string, port int, extra map[string]interface{}, formatter Formatter, levels ...Level) error {
+	lgLevels := convert2logrusLevels(levels...)
+	hook := graylog.NewGraylogHook(fmt.Sprintf("%s:%d", ip, port), extra, lgLevels...)
+	l.entry.Logger.Hooks.Add(hook)
+	return nil
+}
+
+// // AddAsyncGraylogHook will add a sync graylog hook to base logger and will send log by asyncing
+// func AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, bufferSize int, levels ...Level) error {
+// 	return nil
+// }
+
+// func addAsyncGraylogHook(l logger, ip string, port int, extra map[string]interface{}, bufferSize int, levels ...Level) error {
+// 	lgLevels := convert2logrusLevels(levels...)
+// 	hook := graylog.NewAsyncGraylogHook(fmt.Sprintf("%s:%d", ip, port), extra, lgLevels...)
+// 	l.entry.Logger.Hooks.Add(hook)
+
+// 	go func() {
+
+// 	}()
+
+// 	return nil
+// }
+
 // SetOutput set output writer of base logger object
 func SetOutput(w io.Writer) {
 	baseLogger.SetOutput(w)
@@ -613,6 +647,11 @@ func (l logger) AddAsyncSentryHook(dsn string, levels ...Level) error {
 	return addAsyncSentryHook(l, dsn, levels...)
 }
 
+// AddGrayLogHook will add a rotate hook to baseLogger
+func (l logger) AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error {
+	return addGrayLogHook(l, ip, port, extra, dftFormatter, levels...)
+}
+
 func (l logger) SetOutput(w io.Writer) {
 	l.entry.Logger.Out = w
 }
@@ -621,7 +660,7 @@ func (l logger) SetOutput(w io.Writer) {
 func NewLogger(w io.Writer) Logger {
 	l := logrus.New()
 	l.Out = w
-	return logger{entry: logrus.NewEntry(l)}
+	return logger{entry: logrus.NewEntry(l), hooks: make(map[string][]logrus.Hook)}
 }
 
 // NewNopLogger returns a logger that discards all log messages.
