@@ -109,6 +109,28 @@ func main() {
 
 ---
 
+### v0.7-alpha (2017.8.29)
+
+- 增加graylog钩子的添加方法:
+
+```go
+AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
+```
+
+使用例子:
+
+```go
+
+// gray 目前监听的地址: 192.168.1.101:12202/udp
+err := log.AddGrayLogHook("192.168.1.101",12202, map[string]interface{}{"service":"my-service"}, log.InfoLevel, log.ErrorLevel)
+if err != nil {
+    log.Error("fail to add a hook")
+}
+
+```
+
+---
+
 ### v0.6 (2017.8.25)
 
 - 日志切片的hook增加了几个新的方法:
