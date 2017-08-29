@@ -109,12 +109,14 @@ func main() {
 
 ---
 
-### v0.7-alpha (2017.8.29)
+### v0.7-beta (2017.8.29)
 
 - 增加graylog钩子的添加方法:
 
 ```go
 AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
+AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
+GrayAsyncHookFlush()
 ```
 
 使用例子:
@@ -127,6 +129,16 @@ if err != nil {
     log.Error("fail to add a hook")
 }
 
+```
+
+```go 
+err := log.AddAsyncGraylogHook("192.168.1.101",12202, map[string]interface{}{"service":"my-service"}, log.InfoLevel, log.ErrorLevel)
+if err != nil {
+    log.Error("fail to add a hook")
+}
+
+// 若使用异步方法记得在退出前清空缓冲区.
+defer log.GrayAsyncHookFlush()
 ```
 
 ---
