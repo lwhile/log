@@ -388,23 +388,20 @@ func addRotateHook(l logger, path string, maxAge, rotateTime time.Duration, form
 	}
 
 	ls := convert2logrusLevels(higHerLevel(level))
-
-	for _, level := range ls {
-		writer, err := rotatelogs.New(
-			fmt.Sprintf("%s.%s.%s", path, level.String(), format), rotatelogs.WithLinkName(path),
-			rotatelogs.WithMaxAge(maxAge),
-			rotatelogs.WithRotationTime(rotateTime),
-		)
-		if err != nil {
-			return err
-		}
-
-		writeMap := getWriteMap(level, writer)
-
-		hook := lfshook.NewHook(writeMap)
-		hook.SetFormatter(formatter)
-		l.entry.Logger.Hooks.Add(hook)
+	writer, err := rotatelogs.New(
+		fmt.Sprintf("%s.%s", path, format), rotatelogs.WithLinkName(path),
+		rotatelogs.WithMaxAge(maxAge),
+		rotatelogs.WithRotationTime(rotateTime),
+	)
+	if err != nil {
+		return err
 	}
+
+	writeMap := getWriteMap(ls, writer)
+
+	hook := lfshook.NewHook(writeMap)
+	hook.SetFormatter(formatter)
+	l.entry.Logger.Hooks.Add(hook)
 	return nil
 }
 
@@ -424,23 +421,21 @@ func addRotateHookByDay(l logger, path string, maxAge, rotateDay int, formatter 
 	}
 
 	ls := convert2logrusLevels(higHerLevel(level))
-	for _, level := range ls {
-		writer, err := rotatelogs.New(
-			fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d"), rotatelogs.WithLinkName(path),
-			rotatelogs.WithMaxAge(time.Duration(maxAge)*time.Hour*24),
-			rotatelogs.WithRotationTime(time.Duration(rotateDay)*time.Hour*24),
-		)
-		if err != nil {
-			return err
-		}
-
-		writeMap := getWriteMap(level, writer)
-
-		hook := lfshook.NewHook(writeMap)
-		hook.SetFormatter(formatter)
-
-		l.entry.Logger.Hooks.Add(hook)
+	writer, err := rotatelogs.New(
+		fmt.Sprintf("%s.%s", path, "%Y-%m-%d"), rotatelogs.WithLinkName(path),
+		rotatelogs.WithMaxAge(time.Duration(maxAge)*time.Hour*24),
+		rotatelogs.WithRotationTime(time.Duration(rotateDay)*time.Hour*24),
+	)
+	if err != nil {
+		return err
 	}
+
+	writeMap := getWriteMap(ls, writer)
+
+	hook := lfshook.NewHook(writeMap)
+	hook.SetFormatter(formatter)
+	l.entry.Logger.Hooks.Add(hook)
+
 	return nil
 }
 
@@ -461,21 +456,21 @@ func addRotateHookByHour(l logger, path string, maxAge, rotateHour int, formatte
 	}
 
 	ls := convert2logrusLevels(higHerLevel(level))
-	for _, level := range ls {
-		writer, err := rotatelogs.New(
-			fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d@%H:00"), rotatelogs.WithLinkName(path),
-			rotatelogs.WithMaxAge(time.Duration(maxAge)*time.Hour),
-			rotatelogs.WithRotationTime(time.Duration(maxAge)*time.Hour),
-		)
-		if err != nil {
-			return err
-		}
-
-		writeMap := getWriteMap(level, writer)
-		hook := lfshook.NewHook(writeMap)
-		hook.SetFormatter(formatter)
-		l.entry.Logger.Hooks.Add(hook)
+	writer, err := rotatelogs.New(
+		fmt.Sprintf("%s.%s", path, "%Y-%m-%d@%H:00"), rotatelogs.WithLinkName(path),
+		rotatelogs.WithMaxAge(time.Duration(maxAge)*time.Hour),
+		rotatelogs.WithRotationTime(time.Duration(maxAge)*time.Hour),
+	)
+	if err != nil {
+		return err
 	}
+
+	writeMap := getWriteMap(ls, writer)
+
+	hook := lfshook.NewHook(writeMap)
+	hook.SetFormatter(formatter)
+	l.entry.Logger.Hooks.Add(hook)
+
 	return nil
 }
 
@@ -518,22 +513,24 @@ func SetOutput(w io.Writer) {
 	baseLogger.SetOutput(w)
 }
 
-func getWriteMap(level logrus.Level, writer *rotatelogs.RotateLogs) lfshook.WriterMap {
-	var writeMap lfshook.WriterMap
+func getWriteMap(levels []logrus.Level, writer *rotatelogs.RotateLogs) lfshook.WriterMap {
+	writeMap := make(lfshook.WriterMap)
+	for _, level := range levels {
+		writeMap[level] = writer
+		// switch {
+		// case level == logrus.ErrorLevel:
 
-	switch {
-	case level == logrus.ErrorLevel:
-		writeMap = lfshook.WriterMap{logrus.ErrorLevel: writer}
-	case level == logrus.WarnLevel:
-		writeMap = lfshook.WriterMap{logrus.WarnLevel: writer}
-	case level == logrus.DebugLevel:
-		writeMap = lfshook.WriterMap{logrus.DebugLevel: writer}
-	case level == logrus.PanicLevel:
-		writeMap = lfshook.WriterMap{logrus.PanicLevel: writer}
-	case level == logrus.FatalLevel:
-		writeMap = lfshook.WriterMap{logrus.FatalLevel: writer}
-	default:
-		writeMap = lfshook.WriterMap{logrus.InfoLevel: writer}
+		// case level == logrus.WarnLevel:
+		// 	writeMap = lfshook.WriterMap{logrus.WarnLevel: writer}
+		// case level == logrus.DebugLevel:
+		// 	writeMap = lfshook.WriterMap{logrus.DebugLevel: writer}
+		// case level == logrus.PanicLevel:
+		// 	writeMap = lfshook.WriterMap{logrus.PanicLevel: writer}
+		// case level == logrus.FatalLevel:
+		// 	writeMap = lfshook.WriterMap{logrus.FatalLevel: writer}
+		// default:
+		// 	writeMap = lfshook.WriterMap{logrus.InfoLevel: writer}
+		// }
 	}
 
 	return writeMap
