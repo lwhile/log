@@ -206,9 +206,7 @@ func (g *cleanupGuard) Run() {
 }
 
 func (rl *RotateLogs) rotate(filename string) error {
-	fmt.Println("filename:", filename)
 	lockfn := fmt.Sprintf("%s_lock", filename)
-	fmt.Println("lockfn:", lockfn)
 	fh, err := os.OpenFile(lockfn, os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
 		// Can't lock, just return
