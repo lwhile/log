@@ -222,22 +222,22 @@ type Logger interface {
 
 	With(key string, value interface{}) Logger
 
-	AddRotateHook(path string, maxAge, rotateTime time.Duration, format string, levels ...Level) error
-	AddRotateHookWithFormatter(path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, levels ...Level) error
+	AddRotateHook(path string, maxAge, rotateTime time.Duration, format string, level Level) error
+	AddRotateHookWithFormatter(path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, level Level) error
 
-	AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error
-	AddRotateHookByDayWithFormatter(path string, maxAge, rotateDay int, formatter Formatter, levels ...Level) error
+	AddRotateHookByDay(path string, maxAge, rotateDay int, level Level) error
+	AddRotateHookByDayWithFormatter(path string, maxAge, rotateDay int, formatter Formatter, level Level) error
 
-	AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error
-	AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour int, formatter Formatter, levels ...Level) error
+	AddRotateHookByHour(path string, maxAge, rotateHour int, level Level) error
+	AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour int, formatter Formatter, level Level) error
 
-	AddSentryHook(dsn string, levels ...Level) error
-	AddSentryHookWithTag(dsn string, tags map[string]string, levels ...Level) error
+	AddSentryHook(dsn string, level Level) error
+	AddSentryHookWithTag(dsn string, tags map[string]string, level Level) error
 
-	AddAsyncSentryHook(dsn string, levels ...Level) error
+	AddAsyncSentryHook(dsn string, level Level) error
 
-	AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
-	AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
+	AddGrayLogHook(ip string, port int, extra map[string]interface{}, level Level) error
+	AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, level Level) error
 	GrayAsyncHookFlush()
 
 	SetOutput(w io.Writer)
@@ -274,6 +274,8 @@ const (
 	DebugLevel
 )
 
+var levelSlice = []Level{DebugLevel, InfoLevel, WarnLevel, ErrorLevel, FatalLevel, PanicLevel}
+
 func (l Level) String() (s string) {
 	switch {
 	case l == InfoLevel:
@@ -304,7 +306,7 @@ func newOrigLogger() *logrus.Logger {
 	}
 }
 
-func convert2logrusLevels(levels ...Level) []logrus.Level {
+func convert2logrusLevels(levels []Level) []logrus.Level {
 	ls := make([]logrus.Level, len(levels))
 	for i, l := range levels {
 		switch {
@@ -326,12 +328,12 @@ func convert2logrusLevels(levels ...Level) []logrus.Level {
 }
 
 // AddSentryHook will add a sentry hook to baseLogger
-func AddSentryHook(dsn string, levels ...Level) error {
-	return addSentryHook(baseLogger, dsn, levels...)
+func AddSentryHook(dsn string, level Level) error {
+	return addSentryHook(baseLogger, dsn, level)
 }
 
-func addSentryHook(l logger, dsn string, levels ...Level) error {
-	ls := convert2logrusLevels(levels...)
+func addSentryHook(l logger, dsn string, level Level) error {
+	ls := convert2logrusLevels(higHerLevel(level))
 	hook, err := logrus_sentry.NewSentryHook(dsn, ls)
 	if err != nil {
 		return err
@@ -341,12 +343,12 @@ func addSentryHook(l logger, dsn string, levels ...Level) error {
 }
 
 // AddAsyncSentryHook will add a async sentry hook to base logger
-func AddAsyncSentryHook(dsn string, levels ...Level) error {
-	return addAsyncSentryHook(baseLogger, dsn, levels...)
+func AddAsyncSentryHook(dsn string, level Level) error {
+	return addAsyncSentryHook(baseLogger, dsn, level)
 }
 
-func addAsyncSentryHook(l logger, dsn string, levels ...Level) error {
-	ls := convert2logrusLevels(levels...)
+func addAsyncSentryHook(l logger, dsn string, level Level) error {
+	ls := convert2logrusLevels(higHerLevel(level))
 	hook, err := logrus_sentry.NewAsyncSentryHook(dsn, ls)
 	if err != nil {
 		return err
@@ -356,12 +358,12 @@ func addAsyncSentryHook(l logger, dsn string, levels ...Level) error {
 }
 
 // AddSentryHookWithTag wii add a sentry hook with tag to baseLogger
-func AddSentryHookWithTag(dsn string, tags map[string]string, levels ...Level) error {
-	return addSentryHookWithTag(baseLogger, dsn, tags, levels...)
+func AddSentryHookWithTag(dsn string, tags map[string]string, level Level) error {
+	return addSentryHookWithTag(baseLogger, dsn, tags, level)
 }
 
-func addSentryHookWithTag(l logger, dsn string, tags map[string]string, levels ...Level) error {
-	ls := convert2logrusLevels(levels...)
+func addSentryHookWithTag(l logger, dsn string, tags map[string]string, level Level) error {
+	ls := convert2logrusLevels(higHerLevel(level))
 	hook, err := logrus_sentry.NewWithTagsSentryHook(dsn, tags, ls)
 	if err != nil {
 		return err
@@ -371,20 +373,23 @@ func addSentryHookWithTag(l logger, dsn string, tags map[string]string, levels .
 }
 
 // AddRotateHook will add a rotate hook to baseLogger
-func AddRotateHook(path string, maxAge, rotateTime time.Duration, format string, levels ...Level) error {
-	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, dftFormatter, levels...)
+func AddRotateHook(path string, maxAge, rotateTime time.Duration, format string, level Level) error {
+	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, dftFormatter, level)
 }
 
 // AddRotateHookWithFormatter will add a rotate hook to baseLogger with formatter
-func AddRotateHookWithFormatter(path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, levels ...Level) error {
-	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, formatter, levels...)
+func AddRotateHookWithFormatter(path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, level Level) error {
+	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, formatter, level)
 }
 
-func addRotateHook(l logger, path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, levels ...Level) error {
+func addRotateHook(l logger, path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, level Level) error {
 	if err := createDir(path); err != nil {
 		return err
 	}
-	for _, level := range levels {
+
+	ls := convert2logrusLevels(higHerLevel(level))
+
+	for _, level := range ls {
 		writer, err := rotatelogs.New(
 			fmt.Sprintf("%s.%s.%s", path, level.String(), format), rotatelogs.WithLinkName(path),
 			rotatelogs.WithMaxAge(maxAge),
@@ -404,20 +409,22 @@ func addRotateHook(l logger, path string, maxAge, rotateTime time.Duration, form
 }
 
 // AddRotateHookByDay will add a rotate hook to baseLogger rotating by day
-func AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error {
-	return addRotateHookByDay(baseLogger, path, maxAge, rotateDay, dftFormatter, levels...)
+func AddRotateHookByDay(path string, maxAge, rotateDay int, level Level) error {
+	return addRotateHookByDay(baseLogger, path, maxAge, rotateDay, dftFormatter, level)
 }
 
 // AddRotateHookByDayWithFormatter will add a rotate hook with formatter to baseLogger rotating by day
-func AddRotateHookByDayWithFormatter(path string, maxAge, rotateDay int, formatter Formatter, levels ...Level) error {
-	return addRotateHookByDay(baseLogger, path, maxAge, rotateDay, formatter, levels...)
+func AddRotateHookByDayWithFormatter(path string, maxAge, rotateDay int, formatter Formatter, level Level) error {
+	return addRotateHookByDay(baseLogger, path, maxAge, rotateDay, formatter, level)
 }
 
-func addRotateHookByDay(l logger, path string, maxAge, rotateDay int, formatter Formatter, levels ...Level) error {
+func addRotateHookByDay(l logger, path string, maxAge, rotateDay int, formatter Formatter, level Level) error {
 	if err := createDir(path); err != nil {
 		return err
 	}
-	for _, level := range levels {
+
+	ls := convert2logrusLevels(higHerLevel(level))
+	for _, level := range ls {
 		writer, err := rotatelogs.New(
 			fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d"), rotatelogs.WithLinkName(path),
 			rotatelogs.WithMaxAge(time.Duration(maxAge)*time.Hour*24),
@@ -438,21 +445,23 @@ func addRotateHookByDay(l logger, path string, maxAge, rotateDay int, formatter 
 }
 
 // AddRotateHookByHour will add a rotate hook to baseLogger rotating by hour
-func AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error {
-	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, dftFormatter, levels...)
+func AddRotateHookByHour(path string, maxAge, rotateHour int, level Level) error {
+	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, dftFormatter, level)
 }
 
 // AddRotateHookByHourWithFormatter will add a rotate hook to baseLogger rotating by hour with formatter
-func AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour int, formatter Formatter, levels ...Level) error {
-	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, formatter, levels...)
+func AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour int, formatter Formatter, level Level) error {
+	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, formatter, level)
 }
 
 // AddRotateHookByHour will add a rotate hook to baseLogger rotating by hour
-func addRotateHookByHour(l logger, path string, maxAge, rotateHour int, formatter Formatter, levels ...Level) error {
+func addRotateHookByHour(l logger, path string, maxAge, rotateHour int, formatter Formatter, level Level) error {
 	if err := createDir(path); err != nil {
 		return err
 	}
-	for _, level := range levels {
+
+	ls := convert2logrusLevels(higHerLevel(level))
+	for _, level := range ls {
 		writer, err := rotatelogs.New(
 			fmt.Sprintf("%s.%s.%s", path, level.String(), "%Y-%m-%d@%H:00"), rotatelogs.WithLinkName(path),
 			rotatelogs.WithMaxAge(time.Duration(maxAge)*time.Hour),
@@ -471,12 +480,13 @@ func addRotateHookByHour(l logger, path string, maxAge, rotateHour int, formatte
 }
 
 // AddGrayLogHook will add a sync graylog hook to base logger
-func AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error {
-	return addGrayLogHook(baseLogger, ip, port, extra, levels...)
+func AddGrayLogHook(ip string, port int, extra map[string]interface{}, level Level) error {
+	return addGrayLogHook(baseLogger, ip, port, extra, level)
 }
 
-func addGrayLogHook(l logger, ip string, port int, extra map[string]interface{}, levels ...Level) error {
-	lgLevels := convert2logrusLevels(levels...)
+func addGrayLogHook(l logger, ip string, port int, extra map[string]interface{}, level Level) error {
+
+	lgLevels := convert2logrusLevels(higHerLevel(level))
 	hook := graylog.NewGraylogHook(fmt.Sprintf("%s:%d", ip, port), extra, lgLevels...)
 	l.grayHooks = append(l.grayHooks, hook)
 	l.entry.Logger.Hooks.Add(hook)
@@ -484,12 +494,12 @@ func addGrayLogHook(l logger, ip string, port int, extra map[string]interface{},
 }
 
 // AddAsyncGraylogHook will add a sync graylog hook to base logger and will send log by asyncing
-func AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error {
-	return addAsyncGraylogHook(baseLogger, ip, port, extra, levels...)
+func AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, level Level) error {
+	return addAsyncGraylogHook(baseLogger, ip, port, extra, level)
 }
 
-func addAsyncGraylogHook(l logger, ip string, port int, extra map[string]interface{}, levels ...Level) error {
-	lgLevels := convert2logrusLevels(levels...)
+func addAsyncGraylogHook(l logger, ip string, port int, extra map[string]interface{}, level Level) error {
+	lgLevels := convert2logrusLevels(higHerLevel(level))
 	hook := graylog.NewAsyncGraylogHook(fmt.Sprintf("%s:%d", ip, port), extra, lgLevels...)
 	l.grayHooks = append(l.grayHooks, hook)
 	l.entry.Logger.Hooks.Add(hook)
@@ -508,19 +518,19 @@ func SetOutput(w io.Writer) {
 	baseLogger.SetOutput(w)
 }
 
-func getWriteMap(level Level, writer *rotatelogs.RotateLogs) lfshook.WriterMap {
+func getWriteMap(level logrus.Level, writer *rotatelogs.RotateLogs) lfshook.WriterMap {
 	var writeMap lfshook.WriterMap
 
 	switch {
-	case level == ErrorLevel:
+	case level == logrus.ErrorLevel:
 		writeMap = lfshook.WriterMap{logrus.ErrorLevel: writer}
-	case level == WarnLevel:
+	case level == logrus.WarnLevel:
 		writeMap = lfshook.WriterMap{logrus.WarnLevel: writer}
-	case level == DebugLevel:
+	case level == logrus.DebugLevel:
 		writeMap = lfshook.WriterMap{logrus.DebugLevel: writer}
-	case level == PanicLevel:
+	case level == logrus.PanicLevel:
 		writeMap = lfshook.WriterMap{logrus.PanicLevel: writer}
-	case level == FatalLevel:
+	case level == logrus.FatalLevel:
 		writeMap = lfshook.WriterMap{logrus.FatalLevel: writer}
 	default:
 		writeMap = lfshook.WriterMap{logrus.InfoLevel: writer}
@@ -616,50 +626,50 @@ func (l logger) Fatalf(format string, args ...interface{}) {
 	l.sourced().Fatalf(format, args...)
 }
 
-func (l logger) AddSentryHook(dsn string, levels ...Level) error {
-	return addSentryHook(l, dsn, levels...)
+func (l logger) AddSentryHook(dsn string, level Level) error {
+	return addSentryHook(l, dsn, level)
 }
 
-func (l logger) AddSentryHookWithTag(dsn string, tags map[string]string, levels ...Level) error {
-	return addSentryHookWithTag(l, dsn, tags, levels...)
+func (l logger) AddSentryHookWithTag(dsn string, tags map[string]string, level Level) error {
+	return addSentryHookWithTag(l, dsn, tags, level)
 }
 
-func (l logger) AddRotateHook(path string, maxAge, rotateTime time.Duration, format string, levels ...Level) error {
-	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, dftFormatter, levels...)
+func (l logger) AddRotateHook(path string, maxAge, rotateTime time.Duration, format string, level Level) error {
+	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, dftFormatter, level)
 }
 
-func (l logger) AddRotateHookWithFormatter(path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, levels ...Level) error {
-	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, formatter, levels...)
+func (l logger) AddRotateHookWithFormatter(path string, maxAge, rotateTime time.Duration, format string, formatter Formatter, level Level) error {
+	return addRotateHook(baseLogger, path, maxAge, rotateTime, format, formatter, level)
 }
 
-func (l logger) AddRotateHookByDay(path string, maxAge, rotateDay int, levels ...Level) error {
-	return addRotateHookByDay(l, path, maxAge, rotateDay, dftFormatter, levels...)
+func (l logger) AddRotateHookByDay(path string, maxAge, rotateDay int, level Level) error {
+	return addRotateHookByDay(l, path, maxAge, rotateDay, dftFormatter, level)
 }
 
-func (l logger) AddRotateHookByDayWithFormatter(path string, maxAge, rotateDay int, formatter Formatter, levels ...Level) error {
-	return addRotateHookByHour(l, path, maxAge, rotateDay, formatter, levels...)
+func (l logger) AddRotateHookByDayWithFormatter(path string, maxAge, rotateDay int, formatter Formatter, level Level) error {
+	return addRotateHookByHour(l, path, maxAge, rotateDay, formatter, level)
 }
 
-func (l logger) AddRotateHookByHour(path string, maxAge, rotateHour int, levels ...Level) error {
-	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, dftFormatter, levels...)
+func (l logger) AddRotateHookByHour(path string, maxAge, rotateHour int, level Level) error {
+	return addRotateHookByHour(baseLogger, path, maxAge, rotateHour, dftFormatter, level)
 }
 
-func (l logger) AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour int, formatter Formatter, levels ...Level) error {
-	return addRotateHookByHour(l, path, maxAge, rotateHour, formatter, levels...)
+func (l logger) AddRotateHookByHourWithFormatter(path string, maxAge, rotateHour int, formatter Formatter, level Level) error {
+	return addRotateHookByHour(l, path, maxAge, rotateHour, formatter, level)
 }
 
-func (l logger) AddAsyncSentryHook(dsn string, levels ...Level) error {
-	return addAsyncSentryHook(l, dsn, levels...)
+func (l logger) AddAsyncSentryHook(dsn string, level Level) error {
+	return addAsyncSentryHook(l, dsn, level)
 }
 
 // AddGrayLogHook will add a rotate hook to baseLogger
-func (l logger) AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error {
-	return addGrayLogHook(l, ip, port, extra, levels...)
+func (l logger) AddGrayLogHook(ip string, port int, extra map[string]interface{}, level Level) error {
+	return addGrayLogHook(l, ip, port, extra, level)
 }
 
 // AddGrayLogHook will add a sync graylog hook to base logger
-func (l logger) AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error {
-	return addAsyncGraylogHook(l, ip, port, extra, levels...)
+func (l logger) AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, level Level) error {
+	return addAsyncGraylogHook(l, ip, port, extra, level)
 }
 
 // GrayAsyncHookFlush flush all async gray hook
@@ -787,4 +797,16 @@ func createDir(filePath string) error {
 	}
 
 	return os.MkdirAll(dir, 0770)
+}
+
+// return a level slice contains level param itself
+func higHerLevel(level Level) []Level {
+	les := make([]Level, 0)
+	for _, l := range levelSlice {
+		//fmt.Println(l., level, l >= level)
+		if l <= level {
+			les = append(les, l)
+		}
+	}
+	return les
 }
