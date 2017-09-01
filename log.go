@@ -97,6 +97,16 @@ var PrefixedFormatter = &PFormatter{}
 
 var dftFormatter = &logrus.TextFormatter{DisableColors: true}
 
+// type dftFORMATTER struct {
+// 	logrus.TextFormatter
+// }
+
+// var dftFormatter = &dftFORMATTER{}
+
+// func (dft *dftFORMATTER) timestamp(entry *logrus.Entry, format string) string {
+// 	return fmt.Sprint(time.Now().Unix())
+// }
+
 type nullOutput struct{}
 
 // NullOutput implement io.Writer interface but write nothing
