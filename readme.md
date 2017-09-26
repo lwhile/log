@@ -8,7 +8,7 @@
 
 - 打印日志时会带上代码行数
 
-- 针对 sentry 和 日志切片功能的钩子做了封装
+- 针对 sentry, graylog 和 日志切片功能的钩子做了封装
 
 ## Master分支状态
 
@@ -40,34 +40,6 @@ Fix #1
 
 - 增加graylog钩子的添加方法:
 
-```go
-AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
-AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
-GrayAsyncHookFlush()
-```
-
-使用例子:
-
-```go
-
-// gray 目前监听的地址: 192.168.1.101:12202/udp
-err := log.AddGrayLogHook("192.168.1.101",12202, map[string]interface{}{"service":"my-service"}, log.InfoLevel, log.ErrorLevel)
-if err != nil {
-    log.Error("fail to add a hook")
-}
-
-```
-
-```go 
-err := log.AddAsyncGraylogHook("192.168.1.101",12202, map[string]interface{}{"service":"my-service"}, log.InfoLevel, log.ErrorLevel)
-if err != nil {
-    log.Error("fail to add a hook")
-}
-
-// 若使用异步方法记得在退出前清空缓冲区.
-defer log.GrayAsyncHookFlush()
-```
-
 ---
 
 ### v0.6 (2017.8.25)
@@ -92,7 +64,7 @@ time [Level][source] log content
 
 ```go
 
-err := AddRotateHookByDayWithFormatter("log.log", 365, 1, log.PrefixedFormatter, log.InfoLevel, log.ErrorLevel) 
+err := AddRotateHookByDayWithFormatter("log.log", 365, 1, log.PrefixedFormatter, log.InfoLevel) 
 if err != nil {
     log.Error("fail to add a hook")
 }
@@ -120,6 +92,36 @@ log.SetOutput(log.NullOutput)
 基本功能测试版
 
 ---
+
+
+```go
+AddGrayLogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
+AddAsyncGraylogHook(ip string, port int, extra map[string]interface{}, levels ...Level) error
+GrayAsyncHookFlush()
+```
+
+使用例子:
+
+```go
+
+// gray 目前监听的地址: 192.168.1.101:12202/udp
+err := log.AddGrayLogHook("192.168.1.101",12202, map[string]interface{}{"service":"my-service"}, log.InfoLevel)
+if err != nil {
+    log.Error("fail to add a hook")
+}
+
+```
+
+```go 
+err := log.AddAsyncGraylogHook("192.168.1.101",12202, map[string]interface{}{"service":"my-service"}, log.InfoLevel)
+if err != nil {
+    log.Error("fail to add a hook")
+}
+
+// 若使用异步方法记得在退出前清空缓冲区.
+defer log.GrayAsyncHookFlush()
+```
+
 
 ## 如何使用
 
@@ -153,7 +155,7 @@ func main() {
     // 在全局的logger中添加一个 sentry 的hook
     // 函数第一个参数为 sentry 的数据源地址
     // 该地址可以从 http://192.168.1.100:9000/sentry/ 获取
-    err := log.AddSentryHook("http://ac5818c072e249ee9388d3610f641da8:815c23ee6cff4bc49b2b83db37144c98@192.168.1.100:9000/4", log.InfoLevel,log.ErrorLevel)
+    err := log.AddSentryHook("http://ac5818c072e249ee9388d3610f641da8:815c23ee6cff4bc49b2b83db37144c98@192.168.1.100:9000/4", log.InfoLevel)
     if err != nil {
         log.Error("fail to add sentry hook to logrus")
     }
@@ -168,7 +170,7 @@ func main() {
 ```go 
 func main() {
     // 在全局的logger中添加一个 sentry 的异步hook
-    err := log.AddAsyncSentryHook("http://ac5818c072e249ee9388d3610f641da8:815c23ee6cff4bc49b2b83db37144c98@192.168.1.100:9000/4", log.InfoLevel,log.ErrorLevel)
+    err := log.AddAsyncSentryHook("http://ac5818c072e249ee9388d3610f641da8:815c23ee6cff4bc49b2b83db37144c98@192.168.1.100:9000/4", log.InfoLevel)
     if err != nil {
         log.Error("fail to add sentry hook to logrus")
     }
@@ -183,21 +185,21 @@ func main() {
 
 ```go
 func main() {
-    // 将日志保存到文件log.log.info.[date], 并且日志的保存时间为永久, 日志的切分频率为1天, 触发的日志级别为 Info 和 Error
-	err = log.AddRotateHookByDay("log.log", log.ForverDay, 1, log.InfoLevel, log.ErrorLevel)
+    // 将日志保存到文件log.log.info.[date], 并且日志的保存时间为永久, 日志的切分频率为1天, 触发的最小日志级别为 Info 
+	err = log.AddRotateHookByDay("log.log", log.ForverDay, 1, log.InfoLevel)
     if err != nil {
         log.Error("fail to add rotate hook to logrus")
     }
 
-     // 将日志保存到文件log.log.info.[date@time], 并且日志的保存时间为永久, 日志的切分频率为1小时, 触发的日志级别为 Info 和 Error
-    err := log.AddRotateHookByHour("log.log", log.ForverHour, 1, log.InfoLevel, log.ErrorLevel)
+     // 将日志保存到文件log.log.info.[date@time], 并且日志的保存时间为永久, 日志的切分频率为1小时, 触发的最小日志级别为 Info 
+    err := log.AddRotateHookByHour("log.log", log.ForverHour, 1, log.InfoLevel)
     if err != nil {
         log.Error("fail to add rotate hook to logrus")
     }
 
 
-    // 将日志保存到文件log.log.info.[date], 并且日志的保存时间为10分钟, 日志的切分频率为10分钟, 日志文件的命名格式为 "%Y-%m-%d@%H:%M" 触发的日志级别为 Info 和 Error
-    err = log.AddRotateHook("log.log", time.Minute*10, time.Minute*10, "%Y-%m-%d@%H:%M", log.InfoLevel, log.ErrorLevel)
+    // 将日志保存到文件log.log.info.[date], 并且日志的保存时间为10分钟, 日志的切分频率为10分钟, 日志文件的命名格式为 "%Y-%m-%d@%H:%M" 触发的最小日志级别为 Info 
+    err = log.AddRotateHook("log.log", time.Minute*10, time.Minute*10, "%Y-%m-%d@%H:%M", log.InfoLevel)
 	if err != nil {
 		log.Error("fail to add rotate hook to logrus")
 	}
@@ -218,5 +220,5 @@ func main() {
 
 - [x] 将默认的全局logger对象的Level改为Debug (2017.8.24@14:20)
 - [x] 日志文件不存在时自动创建,包括所在整个目录路径 (2017.8.24@15:25)
-- [ ] 支持设置日志格式
-- [ ] 能够针对日志文件的大小进行切片
+- [x] 支持设置日志格式
+- [x] 能够针对日志文件的大小进行切片
